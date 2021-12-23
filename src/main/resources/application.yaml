@@ -1,0 +1,29 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: controller
+  cloud:
+    consul:
+      host: 121.183.228.40
+      port: 8500
+    stream:
+      bindings:
+        c-to-m:
+          producer:
+            exchange-type: direct
+          destination: c-to-m
+        m-to-c:
+          consumer:
+            exchange-type: direct
+          destination: m-to-c
+  rabbitmq:
+    addresses: localhost
+    username: admin
+    password: admin
+
+logging:
+  level:
+    com:
+      ccwlab:
+        controller: DEBUG
