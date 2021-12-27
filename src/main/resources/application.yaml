@@ -13,10 +13,6 @@ spring:
           producer:
             exchange-type: direct
           destination: reportToMain
-        messageFromMain-in-0:
-          consumer:
-            exchange-type: direct
-          destination: commandToController
         reportFromWorker-in-0:
           consumer:
             exchange-type: direct

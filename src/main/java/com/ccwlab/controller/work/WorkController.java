@@ -6,6 +6,8 @@ import com.ccwlab.controller.service.SequenceGeneratorService;
 import com.ccwlab.controller.work.persistent.WorkRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +47,19 @@ public class WorkController {
     StreamBridge streamBridge;
 
     @PostMapping("works")
-    ResponseEntity<Long> requestWork(@RequestBody WorkRequest request){
+    @Operation(description="Request a new CI/CD work.")
+    @ApiResponse(responseCode = "202", description = "Return a id and run asynchronous operation.")
+    @ApiResponse(responseCode = "500", description = "something is wrong.")
+    ResponseEntity<Long> requestWork(@Parameter(description= " The request information") @RequestBody WorkRequest request){
+
+        //slow codes for resiliency testing
+//        try {
+//            Thread.sleep(5000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+
+
         var accessToken = request.accessToken;
         var github = githubUtil.get(accessToken);
         try {
@@ -63,37 +77,39 @@ public class WorkController {
         }
     }
 
-    @PutMapping("/works/{workId}")
-    ResponseEntity<Long> updateWork(@PathVariable long workId, @RequestBody StopWork request){
-        var accessToken = request.accessToken;
-        var github = githubUtil.get(accessToken);
-        if(request.operation == StopOperation.STOP){
-            var workOnProgressOption = this.workRepository.findById(workId);
-            if(workOnProgressOption.isPresent()){
-                try {
-                    var workOnProgress = workOnProgressOption.get();
-                    var repo = github.getRepositoryById(workOnProgress.getRepositoryId());
-                    if (repo.getOwner().getId() == workOnProgress.getOwnerId()) {
-                        workOnProgress.status = WorkStatus.STOPPED;
-                        this.workRepository.save(workOnProgress);
-                        return ResponseEntity.ok().build();
-                    } else {
-                        return ResponseEntity.badRequest().build();
-                    }
-                }catch(IOException ex){
-                    log.debug("ex", ex);
-                    return ResponseEntity.badRequest().build();
-                }
-            }
-            return ResponseEntity.badRequest().build();
-        }else{
-            return ResponseEntity.badRequest().build();
-        }
-    }
+//    @PutMapping("/works/{workId}")
+//    ResponseEntity<Long> updateWork(@PathVariable long workId, @RequestBody StopWork request){
+//        var accessToken = request.accessToken;
+//        var github = githubUtil.get(accessToken);
+//        if(request.operation == StopOperation.STOP){
+//            var workOnProgressOption = this.workRepository.findById(workId);
+//            if(workOnProgressOption.isPresent()){
+//                try {
+//                    var workOnProgress = workOnProgressOption.get();
+//                    var repo = github.getRepositoryById(workOnProgress.getRepositoryId());
+//                    if (repo.getOwner().getId() == workOnProgress.getOwnerId()) {
+//                        workOnProgress.status = WorkStatus.STOPPED;
+//                        this.workRepository.save(workOnProgress);
+//                        return ResponseEntity.ok().build();
+//                    } else {
+//                        return ResponseEntity.badRequest().build();
+//                    }
+//                }catch(IOException ex){
+//                    log.debug("ex", ex);
+//                    return ResponseEntity.badRequest().build();
+//                }
+//            }
+//            return ResponseEntity.badRequest().build();
+//        }else{
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
 
     @Operation(description = "Anyone can see progress on a work.")
+    @ApiResponse(responseCode = "200", description = "return a work object.")
+    @ApiResponse(responseCode = "400", description = "The wrong information")
     @GetMapping("/works/{workId}")
-    ResponseEntity<Work> getProgress(@PathVariable long workId){
+    ResponseEntity<Work> getProgress(@Parameter(description = "A work id which you find a work object with.") @PathVariable long workId){
         var work = this.workRepository.findById(workId);
         if(work.isPresent()) {
             work.get().setAccessToken(null);
