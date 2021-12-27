@@ -9,21 +9,36 @@ spring:
       port: 8500
     stream:
       bindings:
-        c-to-m:
+        reportToMain-out-0:
           producer:
             exchange-type: direct
-          destination: c-to-m
-        m-to-c:
+          destination: reportToMain
+        messageFromMain-in-0:
           consumer:
             exchange-type: direct
-          destination: m-to-c
+          destination: commandToController
+        reportFromWorker-in-0:
+          consumer:
+            exchange-type: direct
+          destination: report
+        sendToWorker-out-0:
+          producer:
+            exchange-type: direct
+          destination: command
   rabbitmq:
     addresses: localhost
     username: admin
     password: admin
+  data:
+    mongodb:
+      uri: mongodb://root:example@localhost:27017/
+      database: controller
 
 logging:
   level:
     com:
       ccwlab:
         controller: DEBUG
+
+jwt:
+  secret: secret
